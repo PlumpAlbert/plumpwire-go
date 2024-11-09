@@ -1,0 +1,12 @@
+{
+	"options": {
+		"theme": "base16-onedark",
+		"wrap": false,
+		"lineNumbers": "normalOnly",
+		"rulers": [
+			80
+		],
+		"indent": 2,
+		"useTabs": true
+	}
+}
