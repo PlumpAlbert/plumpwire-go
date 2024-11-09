@@ -49,7 +49,7 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	})
 
 	username := update.CallbackQuery.From.Username
-	fmt.Printf("Received message from %s", username)
+	fmt.Printf("Received message from %s\n", username)
 
 	var buttons []models.InlineKeyboardButton
 	for _, c := range config.Clients {
@@ -90,7 +90,7 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ProtectContent: true,
 		ChatID:         update.CallbackQuery.Message.Message.Chat.ID,
-		Text:           "Выбери конфигурацию, " + update.CallbackQuery.From.Username + "!",
+		Text:           "Выберите конфигурацию, которую хотите скачать",
 		ReplyMarkup:    kb,
 		ReplyParameters: &models.ReplyParameters{
 			MessageID: update.CallbackQuery.Message.Message.ID,
