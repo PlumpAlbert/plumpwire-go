@@ -40,13 +40,11 @@ func parse_json() {
 
 	bytes, _ := io.ReadAll(jsonFile)
 
-	var config Config
-
-	json.Unmarshal(bytes, &config)
-
-	for _, client := range config.Clients {
-		fmt.Printf("User: %s\n", client.Name)
-		fmt.Printf("IP: %s\n", client.IPAddress)
-		fmt.Printf("Enabled: %t\n\n", client.Enabled)
+	fmt.Println("Loading Wireguard config")
+	err = json.Unmarshal(bytes, &config)
+	if err != nil {
+		fmt.Println("Could not load wireguard config")
+		panic(err)
 	}
+	fmt.Println("Wireguard config loaded")
 }
