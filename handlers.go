@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -51,22 +50,51 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	username := update.CallbackQuery.From.Username
 	fmt.Printf("Received message from %s", username)
 
-	var clients []Client
+	var buttons []models.InlineKeyboardButton
 	for _, c := range config.Clients {
-		match, _ := regexp.MatchString(username+"\\s\\[(.+)\\]", c.Name)
-		if match {
-			clients = append(clients, c)
+		re := regexp.MustCompile(username + `\s\[(?P<Device>.+)\]`)
+
+		if re == nil {
+			return
 		}
-		fmt.Printf("\n")
+
+		matches := re.FindStringSubmatch(c.Name)
+		if matches != nil {
+			fmt.Printf("Matches: %s\n", matches)
+			buttons = append(buttons, models.InlineKeyboardButton{
+				Text: matches[re.SubexpIndex("Device")],
+				CopyText: models.CopyTextButton{
+					Text: c.IPAddress,
+				},
+			})
+		}
 	}
 
-	var lol []string
-	for _, s := range clients {
-		lol = append(lol, s.Name)
+	if len(buttons) == 0 {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.CallbackQuery.Message.Message.Chat.ID,
+			Text:   "К сожалению, Вы не являетесь нашим пользователем",
+			ReplyParameters: &models.ReplyParameters{
+				MessageID: update.CallbackQuery.Message.Message.ID,
+				ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+			},
+		})
+		return
+	}
+
+	kb := &models.InlineKeyboardMarkup{
+		InlineKeyboard: [][]models.InlineKeyboardButton{
+			buttons,
+		},
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.CallbackQuery.Message.Message.Chat.ID,
-		Text:   strings.Join(lol, ", "),
+		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+		Text:        "Выбери конфигурацию, " + update.CallbackQuery.From.Username + "!",
+		ReplyMarkup: kb,
+		ReplyParameters: &models.ReplyParameters{
+			MessageID: update.CallbackQuery.Message.Message.ID,
+			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		},
 	})
 }
