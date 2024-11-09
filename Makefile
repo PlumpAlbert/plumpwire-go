@@ -2,10 +2,10 @@ include .env
 export $(shell sed 's/=.*//' .env)
 
 BINARY_NAME=plumpwire
-BINARY_PATH=build/${BINARY_NAME}
+BINARY_PATH=.bin/${BINARY_NAME}
 
 build:
-	GOARCH=amd64 GOOS=linux go build -o ${BINARY_PATH} main.go
+	GOARCH=amd64 GOOS=linux go build -a -o ${BINARY_PATH} *.go
 
 run: build
 	./${BINARY_PATH}
