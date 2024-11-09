@@ -21,7 +21,11 @@ func main() {
 
 	opts := []bot.Option{
 		bot.WithDefaultHandler(default_handler),
-		bot.WithCallbackQueryDataHandler("devices", bot.MatchTypePrefix, device_list_handler),
+		bot.WithCallbackQueryDataHandler(
+			Callbacks[DEVICES],
+			bot.MatchTypeExact,
+			device_list_handler,
+		),
 	}
 
 	bot_token := os.Getenv("TELEGRAM_TOKEN")

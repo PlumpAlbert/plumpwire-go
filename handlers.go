@@ -10,11 +10,21 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
+type CallbackQuery int
+
+const (
+	DEVICES CallbackQuery = iota
+)
+
+var Callbacks = map[CallbackQuery]string{
+	DEVICES: "devices",
+}
+
 func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	kb := &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "Devices", CallbackData: "devices"},
+				{Text: "Список моих устройств", CallbackData: Callbacks[DEVICES]},
 			},
 		},
 	}
