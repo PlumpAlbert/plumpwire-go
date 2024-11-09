@@ -26,6 +26,11 @@ func main() {
 			bot.MatchTypeExact,
 			device_list_handler,
 		),
+		bot.WithCallbackQueryDataHandler(
+			Callbacks[GET_CONFIG],
+			bot.MatchTypePrefix,
+			config_handler,
+		),
 	}
 
 	bot_token := os.Getenv("TELEGRAM_TOKEN")

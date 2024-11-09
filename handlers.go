@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"regexp"
@@ -13,10 +14,12 @@ type CallbackQuery int
 
 const (
 	DEVICES CallbackQuery = iota
+	GET_CONFIG
 )
 
 var Callbacks = map[CallbackQuery]string{
-	DEVICES: "devices",
+	DEVICES:    "devices",
+	GET_CONFIG: "config",
 }
 
 func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -40,8 +43,6 @@ func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 }
 
 func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	fmt.Println("bot: ", b)
-
 	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 		CallbackQueryID: update.CallbackQuery.ID,
 		ShowAlert:       false,
@@ -62,10 +63,8 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 		if matches != nil {
 			fmt.Printf("Matches: %s\n", matches)
 			buttons = append(buttons, models.InlineKeyboardButton{
-				Text: matches[re.SubexpIndex("Device")],
-				CopyText: models.CopyTextButton{
-					Text: c.IPAddress,
-				},
+				Text:         matches[re.SubexpIndex("Device")],
+				CallbackData: Callbacks[GET_CONFIG] + "/" + c.ID,
 			})
 		}
 	}
@@ -89,12 +88,45 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		Text:        "Выбери конфигурацию, " + update.CallbackQuery.From.Username + "!",
-		ReplyMarkup: kb,
+		ProtectContent: true,
+		ChatID:         update.CallbackQuery.Message.Message.Chat.ID,
+		Text:           "Выбери конфигурацию, " + update.CallbackQuery.From.Username + "!",
+		ReplyMarkup:    kb,
 		ReplyParameters: &models.ReplyParameters{
 			MessageID: update.CallbackQuery.Message.Message.ID,
 			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		},
+	})
+}
+
+func config_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+		CallbackQueryID: update.CallbackQuery.ID,
+		ShowAlert:       false,
+	})
+
+	re := regexp.MustCompile(Callbacks[GET_CONFIG] + `/(?P<ID>.+)`)
+	matches := re.FindStringSubmatch(update.CallbackQuery.Data)
+	if matches == nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			Text: "Что-то пошло не так...",
+		})
+		return
+	}
+
+	id := matches[re.SubexpIndex("ID")]
+	doc, err := get_config(id)
+	if err != nil {
+		fmt.Println("Could not get config: " + err.Error())
+		return
+	}
+
+	b.SendDocument(ctx, &bot.SendDocumentParams{
+		Caption: "Ваша конфигурация подключения!",
+		ChatID:  update.CallbackQuery.Message.Message.Chat.ID,
+		Document: &models.InputFileUpload{
+			Filename: "Wireguard." + update.CallbackQuery.From.Username + ".conf",
+			Data:     bytes.NewReader(doc),
 		},
 	})
 }
