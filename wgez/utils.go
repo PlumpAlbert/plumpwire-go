@@ -17,6 +17,8 @@ type WGEasy struct {
 
 	// List of clients
 	Clients []models.WG_Client
+
+	Devices map[string][]models.WG_Client
 }
 
 // Create new instance of wg
@@ -40,6 +42,30 @@ func (wg WGEasy) GetClients() error {
 	}
 
 	err = json.NewDecoder(res.Body).Decode(&wg.Clients)
+	if err != nil {
+		fmt.Println("Could not retreive list of clients")
+		fmt.Println(err.Error())
+		return err
+	}
+
+	for _, c := range wg.Clients {
+		re, err := regexp.Compile(`(?P<Username>[\d\w_]+)\s\[(?P<Device>.+)\]`)
+		if err != nil {
+			continue
+		}
+
+		matches := re.FindStringSubmatch(c.Name)
+		if matches != nil {
+			username := matches[re.SubexpIndex("Username")]
+
+			if wg.Devices[username] == nil {
+				wg.Devices[username] = []models.WG_Client{}
+			}
+
+			c.DeviceName = matches[re.SubexpIndex("Device")]
+			wg.Devices[username] = append(wg.Devices[username], c)
+		}
+	}
 	return nil
 }
 
@@ -84,4 +110,20 @@ func (wg WGEasy) GetDevices(client_name string) ([]models.WG_Client, error) {
 	}
 
 	return clients, nil
+}
+
+// Get configuration by ID
+func (wg WGEasy) GetConfig(id string) (*models.WG_Client, error) {
+	err := wg.GetClients()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range wg.Clients {
+		if c.ID == id {
+			return &c, nil
+		}
+	}
+
+	return nil, errors.New("Could not find client with id `" + id + "`")
 }
