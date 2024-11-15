@@ -1,7 +1,10 @@
-FROM golang:latest
-WORKDIR /app
-COPY go.mod go.sum ./
+FROM golang:latest as builder
+WORKDIR /build
+COPY ./ ./
 RUN go mod download
-COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /plumpwire
-CMD ["/plumpwire"]
+RUN CGO_ENABLED=0 go build -o /main
+
+FROM scratch
+WORKDIR /app
+COPY --from=builder /build/main ./main
+CMD ["./main"]
