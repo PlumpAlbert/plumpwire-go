@@ -2,16 +2,36 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 
 	"github.com/go-telegram/bot"
+	"plumpalbert.xyz/plumpwire/models"
 )
 
-var config Config
+var config models.AppConfig
+
+func LoadConfig() error {
+	config.WG_HOST = os.Getenv("WG_HOST")
+	if config.WG_HOST == "" {
+		return errors.New("Please provide WG_HOST environment variable")
+	}
+
+	config.TELEGRAM_TOKEN = os.Getenv("TELEGRAM_TOKEN")
+	if config.TELEGRAM_TOKEN == "" {
+		return errors.New("Please provide TELEGRAM_TOKEN environment variable")
+	}
+
+	return nil
+}
 
 func main() {
-	parse_json()
+	err := LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
@@ -33,8 +53,7 @@ func main() {
 		),
 	}
 
-	bot_token := os.Getenv("TELEGRAM_TOKEN")
-	b, err := bot.New(bot_token, opts...)
+	b, err := bot.New(config.TELEGRAM_TOKEN, opts...)
 	if err != nil {
 		panic(err)
 	}
