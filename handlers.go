@@ -51,12 +51,19 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	username := update.CallbackQuery.From.Username
 	fmt.Printf("Received message from %s\n", username)
 
-	err := wg.GetClients()
+	devices, err := wg.GetDevices(username)
 	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.CallbackQuery.Message.Message.Chat.ID,
+			Text:   "Что-то пошло не по плану...",
+			ReplyParameters: &models.ReplyParameters{
+				MessageID: update.CallbackQuery.Message.Message.ID,
+				ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+			},
+		})
+		fmt.Printf("Error: %s\n", err)
 		return
 	}
-
-	devices, err := wg.GetDevices(username)
 
 	if len(devices) == 0 {
 		b.SendMessage(ctx, &bot.SendMessageParams{
@@ -73,7 +80,7 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	var buttons []models.InlineKeyboardButton
 	for _, c := range devices {
 		buttons = append(buttons, models.InlineKeyboardButton{
-			Text:         c.Name,
+			Text:         c.DeviceName,
 			CallbackData: Callbacks[GET_CONFIG] + "/" + c.ID,
 		})
 	}
