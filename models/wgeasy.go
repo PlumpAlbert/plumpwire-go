@@ -17,4 +17,6 @@ type WG_Client struct {
 	TransferRx           int    `json:"transferRx,omitempty"`
 	TransferTx           int    `json:"transferTx,omitempty"`
 	Endpoint             string `json:"endpoint,omitempty"`
+
+	DeviceName string
 }
