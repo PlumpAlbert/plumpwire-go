@@ -8,9 +8,11 @@ import (
 
 	"github.com/go-telegram/bot"
 	"plumpalbert.xyz/plumpwire/models"
+	"plumpalbert.xyz/plumpwire/wgez"
 )
 
 var config models.AppConfig
+var wg wgez.WGEasy
 
 func LoadConfig() error {
 	config.WG_HOST = os.Getenv("WG_HOST")
@@ -31,6 +33,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	wg = wgez.New(config.WG_HOST)
 
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
