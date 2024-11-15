@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"slices"
 
 	"plumpalbert.xyz/plumpwire/models"
 )
@@ -57,13 +58,22 @@ func (wg WGEasy) GetClients() error {
 		matches := re.FindStringSubmatch(c.Name)
 		if matches != nil {
 			username := matches[re.SubexpIndex("Username")]
+			c.DeviceName = matches[re.SubexpIndex("Device")]
 
 			if wg.Devices[username] == nil {
 				wg.Devices[username] = []models.WG_Client{}
 			}
 
-			c.DeviceName = matches[re.SubexpIndex("Device")]
-			wg.Devices[username] = append(wg.Devices[username], c)
+			idx := slices.IndexFunc(wg.Devices[username], func(o models.WG_Client) bool {
+				return c.ID == o.ID
+			})
+
+			if idx == -1 {
+				wg.Devices[username] = append(wg.Devices[username], c)
+				continue
+			}
+
+			wg.Devices[username][idx] = c
 		}
 	}
 	return nil
@@ -110,20 +120,4 @@ func (wg WGEasy) GetDevices(client_name string) ([]models.WG_Client, error) {
 	}
 
 	return clients, nil
-}
-
-// Get configuration by ID
-func (wg WGEasy) GetConfig(id string) (*models.WG_Client, error) {
-	err := wg.GetClients()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, c := range wg.Clients {
-		if c.ID == id {
-			return &c, nil
-		}
-	}
-
-	return nil, errors.New("Could not find client with id `" + id + "`")
 }
