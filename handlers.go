@@ -109,8 +109,7 @@ func config_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 
-	id := matches[re.SubexpIndex("ID")]
-	doc, err := get_config(id)
+	doc, err := wg.GetClientConfig(matches[re.SubexpIndex("ID")])
 	if err != nil {
 		fmt.Println("Could not get config: " + err.Error())
 		return
