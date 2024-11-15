@@ -19,4 +19,5 @@ type WG_Client struct {
 	Endpoint             string `json:"endpoint,omitempty"`
 
 	DeviceName string
+	Username   string
 }
