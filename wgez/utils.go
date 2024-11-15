@@ -2,7 +2,6 @@ package wgez
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,6 +26,7 @@ func New(host string) WGEasy {
 	wg := WGEasy{
 		host:    host,
 		Clients: []models.WG_Client{},
+		Devices: map[string][]models.WG_Client{},
 	}
 
 	return wg
@@ -57,23 +57,23 @@ func (wg WGEasy) GetClients() error {
 
 		matches := re.FindStringSubmatch(c.Name)
 		if matches != nil {
-			username := matches[re.SubexpIndex("Username")]
+			c.Username = matches[re.SubexpIndex("Username")]
 			c.DeviceName = matches[re.SubexpIndex("Device")]
 
-			if wg.Devices[username] == nil {
-				wg.Devices[username] = []models.WG_Client{}
+			if wg.Devices[c.Username] == nil {
+				wg.Devices[c.Username] = []models.WG_Client{}
 			}
 
-			idx := slices.IndexFunc(wg.Devices[username], func(o models.WG_Client) bool {
+			idx := slices.IndexFunc(wg.Devices[c.Username], func(o models.WG_Client) bool {
 				return c.ID == o.ID
 			})
 
 			if idx == -1 {
-				wg.Devices[username] = append(wg.Devices[username], c)
+				wg.Devices[c.Username] = append(wg.Devices[c.Username], c)
 				continue
 			}
 
-			wg.Devices[username][idx] = c
+			wg.Devices[c.Username][idx] = c
 		}
 	}
 	return nil
@@ -93,31 +93,10 @@ func (wg WGEasy) GetClientConfig(client_id string) ([]byte, error) {
 }
 
 // Get list of devices per client
-func (wg WGEasy) GetDevices(client_name string) ([]models.WG_Client, error) {
+func (wg WGEasy) GetDevices(user_name string) ([]models.WG_Client, error) {
 	err := wg.GetClients()
 	if err != nil {
 		return nil, err
 	}
-
-	var clients []models.WG_Client
-
-	for _, c := range wg.Clients {
-		regexpString := client_name + `\s\[(?P<Device>.+)\]`
-		re := regexp.MustCompile(regexpString)
-
-		if re == nil {
-			return nil, errors.New(
-				"Could not create regular expression from string: \"" +
-					client_name + `\s\[(?P<Device>.+)\]"`,
-			)
-		}
-
-		matches := re.FindStringSubmatch(c.Name)
-		if matches != nil {
-			fmt.Printf("Matches: %s\n", matches)
-			clients = append(clients, c)
-		}
-	}
-
-	return clients, nil
+	return wg.Devices[user_name], nil
 }
