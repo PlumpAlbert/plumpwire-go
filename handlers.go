@@ -51,25 +51,14 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 	username := update.CallbackQuery.From.Username
 	fmt.Printf("Received message from %s\n", username)
 
-	var buttons []models.InlineKeyboardButton
-	for _, c := range config.Clients {
-		re := regexp.MustCompile(username + `\s\[(?P<Device>.+)\]`)
-
-		if re == nil {
-			return
-		}
-
-		matches := re.FindStringSubmatch(c.Name)
-		if matches != nil {
-			fmt.Printf("Matches: %s\n", matches)
-			buttons = append(buttons, models.InlineKeyboardButton{
-				Text:         matches[re.SubexpIndex("Device")],
-				CallbackData: Callbacks[GET_CONFIG] + "/" + c.ID,
-			})
-		}
+	err := wg.GetClients()
+	if err != nil {
+		return
 	}
 
-	if len(buttons) == 0 {
+	devices, err := wg.GetDevices(username)
+
+	if len(devices) == 0 {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.CallbackQuery.Message.Message.Chat.ID,
 			Text:   "К сожалению, Вы не являетесь нашим пользователем",
@@ -81,20 +70,26 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 		return
 	}
 
-	kb := &models.InlineKeyboardMarkup{
-		InlineKeyboard: [][]models.InlineKeyboardButton{
-			buttons,
-		},
+	var buttons []models.InlineKeyboardButton
+	for _, c := range devices {
+		buttons = append(buttons, models.InlineKeyboardButton{
+			Text:         c.Name,
+			CallbackData: Callbacks[GET_CONFIG] + "/" + c.ID,
+		})
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ProtectContent: true,
 		ChatID:         update.CallbackQuery.Message.Message.Chat.ID,
 		Text:           "Выберите конфигурацию, которую хотите скачать",
-		ReplyMarkup:    kb,
+		ReplyMarkup: &models.InlineKeyboardMarkup{
+			InlineKeyboard: [][]models.InlineKeyboardButton{
+				buttons,
+			},
+		},
 		ReplyParameters: &models.ReplyParameters{
-			MessageID: update.CallbackQuery.Message.Message.ID,
 			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+			MessageID: update.CallbackQuery.Message.Message.ID,
 		},
 	})
 }
