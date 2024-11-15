@@ -17,12 +17,12 @@ var wg wgez.WGEasy
 func LoadConfig() error {
 	config.WG_HOST = os.Getenv("WG_HOST")
 	if config.WG_HOST == "" {
-		return errors.New("Please provide WG_HOST environment variable")
+		return errors.New("please provide WG_HOST environment variable")
 	}
 
 	config.TELEGRAM_TOKEN = os.Getenv("TELEGRAM_TOKEN")
 	if config.TELEGRAM_TOKEN == "" {
-		return errors.New("Please provide TELEGRAM_TOKEN environment variable")
+		return errors.New("please provide TELEGRAM_TOKEN environment variable")
 	}
 
 	return nil
