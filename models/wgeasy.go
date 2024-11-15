@@ -1,4 +1,4 @@
-package main
+package models
 
 type WG_Client struct {
 	ID                   string `json:"id,omitempty"`
