@@ -1,11 +1,10 @@
-package utils
+package wgez
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	"plumpalbert.xyz/plumpwire/models"
 )
@@ -18,7 +17,15 @@ type WGEasy struct {
 	Clients []models.WG_Client
 }
 
-var wg_host = os.Getenv("WG_HOST")
+// Create new instance of wg
+func New(host string) WGEasy {
+	wg := WGEasy{
+		host:    host,
+		Clients: []models.WG_Client{},
+	}
+
+	return wg
+}
 
 // Get list of wg-easy clients
 func (wg WGEasy) GetClients() error {
@@ -36,7 +43,7 @@ func (wg WGEasy) GetClients() error {
 
 // Get client configuration file
 func (wg WGEasy) GetClientConfig(client_id string) ([]byte, error) {
-	res, err := http.Get(wg_host + `/api/wireguard/client/` + client_id + `/configuration`)
+	res, err := http.Get(wg.host + `/api/wireguard/client/` + client_id + `/configuration`)
 
 	if err != nil {
 		fmt.Println("Could not get configuration")
