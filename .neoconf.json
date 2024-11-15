@@ -1,6 +1,6 @@
 {
 	"options": {
-		"theme": "base16-onedark",
+		"theme": "vscode",
 		"wrap": false,
 		"lineNumbers": "normalOnly",
 		"rulers": [
