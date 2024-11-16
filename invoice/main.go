@@ -36,7 +36,7 @@ func New(host string, token string) (*InvoiceManager, error) {
 }
 
 // Get list of clients
-func (inv InvoiceManager) GetClients() error {
+func (inv *InvoiceManager) GetClients() error {
 	res, err := inv.c.Get(inv.endpoint + "/clients?status=active")
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (inv InvoiceManager) GetClients() error {
 }
 
 // Get client object by name
-func (inv InvoiceManager) GetClient(client_name string) (*models.Client, error) {
+func (inv *InvoiceManager) GetClient(client_name string) (*models.Client, error) {
 	err := inv.GetClients()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (inv InvoiceManager) GetClient(client_name string) (*models.Client, error) 
 }
 
 // Get list of invoices for client
-func (inv InvoiceManager) GetBill(client_name string) ([]models.Invoice, error) {
+func (inv *InvoiceManager) GetBill(client_name string) ([]models.Invoice, error) {
 	client, err := inv.GetClient(client_name)
 	if err != nil {
 		return nil, err
