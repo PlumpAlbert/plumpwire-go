@@ -10,15 +10,21 @@ import (
 
 type InvoiceManager struct {
 	endpoint string
+	c        *httpClient
 
 	Clients []models.Client
 }
 
 // Generate new Invoice object
-func New(host string) (*InvoiceManager, error) {
+func New(host string, token string) (*InvoiceManager, error) {
 	invoice := InvoiceManager{
 		endpoint: host + "/api/v1",
-		Clients:  []models.Client{},
+		c: &httpClient{
+			c:     http.Client{},
+			token: token,
+		},
+
+		Clients: []models.Client{},
 	}
 
 	err := invoice.GetClients()
@@ -31,12 +37,21 @@ func New(host string) (*InvoiceManager, error) {
 
 // Get list of clients
 func (inv InvoiceManager) GetClients() error {
-	res, err := http.Get(inv.endpoint + "/clients?status=active")
+	res, err := inv.c.Get(inv.endpoint + "/clients?status=active")
 	if err != nil {
 		return err
 	}
 
-	return json.NewDecoder(res.Body).Decode(&inv.Clients)
+	var test struct {
+		Data []models.Client `json:"data"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&test)
+	if err != nil {
+		return err
+	}
+
+	inv.Clients = test.Data
+	return nil
 }
 
 // Get client object by name
@@ -62,7 +77,7 @@ func (inv InvoiceManager) GetBill(client_name string) ([]models.Invoice, error) 
 		return nil, err
 	}
 
-	res, err := http.Get(inv.endpoint + "/invoices?status=active&client_status=unpaid&client_id=" + client.ID)
+	res, err := inv.c.Get(inv.endpoint + "/invoices?status=active&client_status=unpaid&client_id=" + client.ID)
 
 	var test struct {
 		Data []models.Invoice `json:"data"`
