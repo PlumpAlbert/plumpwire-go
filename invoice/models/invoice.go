@@ -1,10 +1,12 @@
 package models
 
 type Client struct {
-	ID             string  `json:"id,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	Balance        float64 `json:"balance,omitempty"`
-	PaidToDate     float64 `json:"paid_to_date,omitempty"`
+	ID string `json:"id,omitempty"`
+	// User's name
+	Name string `json:"name,omitempty"`
+	// Amount of spent money
+	PaidToDate float64 `json:"paid_to_date,omitempty"`
+	// How much money user has over-payed
 	PaymentBalance float64 `json:"payment_balance,omitempty"`
 }
 
