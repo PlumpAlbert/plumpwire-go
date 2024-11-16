@@ -26,20 +26,24 @@ var Callbacks = map[CallbackQuery]string{
 	INVOICE:    "invoice",
 }
 
-func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	kb := &models.InlineKeyboardMarkup{
+func GetDefaultActions() *models.InlineKeyboardMarkup {
+	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "Список моих устройств", CallbackData: Callbacks[DEVICES]},
-				{Text: "Посмотреть статус подписки", CallbackData: Callbacks[INVOICE]},
+				{Text: "Список устройств", CallbackData: Callbacks[DEVICES]},
+			},
+			{
+				{Text: "Статус подписки", CallbackData: Callbacks[INVOICE]},
 			},
 		},
 	}
+}
 
+func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
 		Text:        "Hi there, " + update.Message.From.Username + "!",
-		ReplyMarkup: kb,
+		ReplyMarkup: GetDefaultActions(),
 		ReplyParameters: &models.ReplyParameters{
 			MessageID: update.Message.ID,
 			ChatID:    update.Message.Chat.ID,
@@ -82,12 +86,12 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 		return
 	}
 
-	var buttons []models.InlineKeyboardButton
+	var buttons [][]models.InlineKeyboardButton
 	for _, c := range devices {
-		buttons = append(buttons, models.InlineKeyboardButton{
+		buttons = append(buttons, []models.InlineKeyboardButton{{
 			Text:         c.DeviceName,
 			CallbackData: Callbacks[GET_CONFIG] + "/" + c.ID,
-		})
+		}})
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
@@ -95,14 +99,17 @@ func device_list_handler(ctx context.Context, b *bot.Bot, update *models.Update)
 		ChatID:         update.CallbackQuery.Message.Message.Chat.ID,
 		Text:           "Выберите конфигурацию, которую хотите скачать",
 		ReplyMarkup: &models.InlineKeyboardMarkup{
-			InlineKeyboard: [][]models.InlineKeyboardButton{
-				buttons,
-			},
+			InlineKeyboard: buttons,
 		},
 		ReplyParameters: &models.ReplyParameters{
 			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
 			MessageID: update.CallbackQuery.Message.Message.ID,
 		},
+	})
+
+	b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		MessageID: update.CallbackQuery.Message.Message.ID,
 	})
 }
 
@@ -167,13 +174,19 @@ func invoice_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	message := text + "\n\n" + strings.Join(invoiceTexts, "\n")
 
-	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
-		ParseMode: models.ParseModeMarkdown,
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+		ParseMode:   models.ParseModeMarkdown,
+		ReplyMarkup: GetDefaultActions(),
 		Text: strings.ReplaceAll(
 			strings.ReplaceAll(message, ".", "\\."),
 			"-",
 			"\\-",
 		),
+	})
+
+	b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		MessageID: update.CallbackQuery.Message.Message.ID,
 	})
 }
