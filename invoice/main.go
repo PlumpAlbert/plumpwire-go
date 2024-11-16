@@ -91,7 +91,7 @@ func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error
 }
 
 // Get list of recurring invoices for client
-func (inv *InvoiceManager) GetRecurringInvoices(client models.Client) ([]models.RecurringInvoice, error) {
+func (inv *InvoiceManager) GetRecurringInvoices(client *models.Client) ([]models.RecurringInvoice, error) {
 	res, err := inv.c.Get(inv.endpoint + "/recurring_invoices?status=active&client_id=" + client.ID)
 	if err != nil {
 		return nil, err
