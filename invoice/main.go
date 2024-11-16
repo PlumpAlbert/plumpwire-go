@@ -71,7 +71,7 @@ func (inv *InvoiceManager) GetClient(client_name string) (*models.Client, error)
 }
 
 // Get list of invoices for client
-func (inv *InvoiceManager) GetBill(client_name string) ([]models.Invoice, error) {
+func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error) {
 	client, err := inv.GetClient(client_name)
 	if err != nil {
 		return nil, err
