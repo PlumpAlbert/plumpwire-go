@@ -89,3 +89,21 @@ func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error
 
 	return test.Data, nil
 }
+
+// Get list of recurring invoices for client
+func (inv *InvoiceManager) GetRecurringInvoices(client models.Client) ([]models.RecurringInvoice, error) {
+	res, err := inv.c.Get(inv.endpoint + "/recurring_invoices?status=active&client_id=" + client.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var test struct {
+		Data []models.RecurringInvoice `json:"data"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&test)
+	if err != nil {
+		return nil, err
+	}
+
+	return test.Data, nil
+}
