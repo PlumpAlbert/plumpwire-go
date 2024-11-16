@@ -29,15 +29,15 @@ type Invoice struct {
 	Amount   float64       `json:"amount,omitempty"`
 	Balance  float64       `json:"balance,omitempty"`
 	StatusID InvoiceStatus `json:"status_id,omitempty"`
-	Date     string        `json:"date,omitempty"`
-	DueDate  string        `json:"due_date,omitempty"`
+	Date     InvoiceDate   `json:"date,omitempty"`
+	DueDate  InvoiceDate   `json:"due_date,omitempty"`
 }
 
 type RecurringInvoice struct {
-	ID       string
-	ClientID string
+	ID       string `json:"id,omitempty"`
+	ClientID string `json:"client_id,omitempty"`
 	// Amount of invoice
-	Amount float64
+	Amount float64 `json:"amount,omitempty"`
 	// Date of next bill
-	NextSendDate string
+	NextSendDate InvoiceDate `json:"next_send_date,omitempty"`
 }
