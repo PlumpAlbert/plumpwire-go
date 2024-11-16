@@ -54,3 +54,23 @@ func (inv InvoiceManager) GetClient(client_name string) (*models.Client, error) 
 
 	return nil, errors.New("could not find client `" + client_name + "`")
 }
+
+// Get list of invoices for client
+func (inv InvoiceManager) GetBill(client_name string) ([]models.Invoice, error) {
+	client, err := inv.GetClient(client_name)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.Get(inv.endpoint + "/invoices?status=active&client_status=unpaid&client_id=" + client.ID)
+
+	var test struct {
+		Data []models.Invoice `json:"data"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&test)
+	if err != nil {
+		return nil, err
+	}
+
+	return test.Data, nil
+}
