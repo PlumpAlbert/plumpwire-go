@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"plumpalbert.xyz/plumpwire/invoice/models"
@@ -36,4 +37,20 @@ func (inv InvoiceManager) GetClients() error {
 	}
 
 	return json.NewDecoder(res.Body).Decode(&inv.Clients)
+}
+
+// Get client object by name
+func (inv InvoiceManager) GetClient(client_name string) (*models.Client, error) {
+	err := inv.GetClients()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range inv.Clients {
+		if c.Name == client_name {
+			return &c, nil
+		}
+	}
+
+	return nil, errors.New("could not find client `" + client_name + "`")
 }
