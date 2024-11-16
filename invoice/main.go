@@ -7,15 +7,15 @@ import (
 	"plumpalbert.xyz/plumpwire/invoice/models"
 )
 
-type Invoice struct {
+type InvoiceManager struct {
 	endpoint string
 
 	Clients []models.Client
 }
 
 // Generate new Invoice object
-func New(host string) (*Invoice, error) {
-	invoice := Invoice{
+func New(host string) (*InvoiceManager, error) {
+	invoice := InvoiceManager{
 		endpoint: host + "/api/v1",
 		Clients:  []models.Client{},
 	}
@@ -29,7 +29,7 @@ func New(host string) (*Invoice, error) {
 }
 
 // Get list of clients
-func (inv Invoice) GetClients() error {
+func (inv InvoiceManager) GetClients() error {
 	res, err := http.Get(inv.endpoint + "/clients?status=active")
 	if err != nil {
 		return err
