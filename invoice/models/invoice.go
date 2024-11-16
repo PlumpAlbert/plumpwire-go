@@ -32,3 +32,12 @@ type Invoice struct {
 	Date     string        `json:"date,omitempty"`
 	DueDate  string        `json:"due_date,omitempty"`
 }
+
+type RecurringInvoice struct {
+	ID       string
+	ClientID string
+	// Amount of invoice
+	Amount float64
+	// Date of next bill
+	NextSendDate string
+}
