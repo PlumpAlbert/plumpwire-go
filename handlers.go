@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -150,14 +152,28 @@ func invoice_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 
-	text := fmt.Sprintf("Пользователь %s\nБаланс: %f\nPaid to date: %f\nPayment balance: %f",
-		client.Name,
-		client.Balance,
-		client.PaidToDate,
-		client.PaymentBalance,
-	)
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.CallbackQuery.Message.Message.Chat.ID,
-		Text:   text,
+	text := fmt.Sprintf("*Переплата*: %.2f ₽", client.PaymentBalance)
+
+	invoices, err := im.GetRecurringInvoices(client)
+	var invoiceTexts []string
+	for _, i := range invoices {
+		t := fmt.Sprintf(
+			"📅 *Дата следующей оплаты*: %s\n💰 *Сумма к оплате* - %.2f ₽",
+			time.Time(i.NextSendDate).Format("02.01.2006"),
+			i.Amount,
+		)
+		invoiceTexts = append(invoiceTexts, t)
+	}
+
+	message := text + "\n\n" + strings.Join(invoiceTexts, "\n")
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		ParseMode: models.ParseModeMarkdown,
+		Text: strings.ReplaceAll(
+			strings.ReplaceAll(message, ".", "\\."),
+			"-",
+			"\\-",
+		),
 	})
 }
