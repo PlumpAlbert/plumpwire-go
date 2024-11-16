@@ -67,6 +67,11 @@ func main() {
 			bot.MatchTypePrefix,
 			config_handler,
 		),
+		bot.WithCallbackQueryDataHandler(
+			Callbacks[INVOICE],
+			bot.MatchTypeExact,
+			invoice_handler,
+		),
 	}
 
 	b, err := bot.New(config.TELEGRAM_TOKEN, opts...)

@@ -15,11 +15,13 @@ type CallbackQuery int
 const (
 	DEVICES CallbackQuery = iota
 	GET_CONFIG
+	INVOICE
 )
 
 var Callbacks = map[CallbackQuery]string{
 	DEVICES:    "devices",
 	GET_CONFIG: "config",
+	INVOICE:    "invoice",
 }
 
 func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -27,6 +29,7 @@ func default_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
 				{Text: "Список моих устройств", CallbackData: Callbacks[DEVICES]},
+				{Text: "Посмотреть статус подписки", CallbackData: Callbacks[INVOICE]},
 			},
 		},
 	}
@@ -129,5 +132,32 @@ func config_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			Filename: "Wireguard." + update.CallbackQuery.From.Username + ".conf",
 			Data:     bytes.NewReader(doc),
 		},
+	})
+}
+
+func invoice_handler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+		CallbackQueryID: update.CallbackQuery.ID,
+		ShowAlert:       false,
+	})
+
+	client, err := im.GetClient(update.CallbackQuery.From.Username)
+	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.CallbackQuery.Message.Message.Chat.ID,
+			Text:   "Кажется, Вы не являетесь нашим пользователем",
+		})
+		return
+	}
+
+	text := fmt.Sprintf("Пользователь %s\nБаланс: %f\nPaid to date: %f\nPayment balance: %f",
+		client.Name,
+		client.Balance,
+		client.PaidToDate,
+		client.PaymentBalance,
+	)
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.CallbackQuery.Message.Message.Chat.ID,
+		Text:   text,
 	})
 }
