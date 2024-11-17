@@ -3,6 +3,8 @@ package invoice
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"plumpalbert.xyz/plumpwire/invoice/models"
@@ -29,6 +31,7 @@ func New(host string, token string) (*InvoiceManager, error) {
 
 	err := invoice.GetClients()
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -39,6 +42,7 @@ func New(host string, token string) (*InvoiceManager, error) {
 func (inv *InvoiceManager) GetClients() error {
 	res, err := inv.c.Get(inv.endpoint + "/clients?status=active")
 	if err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 
@@ -47,10 +51,12 @@ func (inv *InvoiceManager) GetClients() error {
 	}
 	err = json.NewDecoder(res.Body).Decode(&test)
 	if err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 
 	inv.Clients = test.Data
+	slog.Debug(fmt.Sprintf("[GetClients] %#v", inv.Clients))
 	return nil
 }
 
@@ -58,11 +64,14 @@ func (inv *InvoiceManager) GetClients() error {
 func (inv *InvoiceManager) GetClient(client_name string) (*models.Client, error) {
 	err := inv.GetClients()
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
 	for _, c := range inv.Clients {
+		slog.Debug(fmt.Sprintf("[GetClient] Check: %#v == %s", c, client_name))
 		if c.Name == client_name {
+			slog.Debug(fmt.Sprintf("[GetClient] Found %#v", c))
 			return &c, nil
 		}
 	}
@@ -74,6 +83,7 @@ func (inv *InvoiceManager) GetClient(client_name string) (*models.Client, error)
 func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error) {
 	client, err := inv.GetClient(client_name)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -84,9 +94,11 @@ func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error
 	}
 	err = json.NewDecoder(res.Body).Decode(&test)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
+	slog.Debug(fmt.Sprintf("[GetBills] Received %#v", test.Data))
 	return test.Data, nil
 }
 
@@ -94,6 +106,7 @@ func (inv *InvoiceManager) GetBills(client_name string) ([]models.Invoice, error
 func (inv *InvoiceManager) GetRecurringInvoices(client *models.Client) ([]models.RecurringInvoice, error) {
 	res, err := inv.c.Get(inv.endpoint + "/recurring_invoices?status=active&client_id=" + client.ID)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -102,8 +115,10 @@ func (inv *InvoiceManager) GetRecurringInvoices(client *models.Client) ([]models
 	}
 	err = json.NewDecoder(res.Body).Decode(&test)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
+	slog.Debug(fmt.Sprintf("[GetRecurringInvoices] Received %#v", test.Data))
 	return test.Data, nil
 }
