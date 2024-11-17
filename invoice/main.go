@@ -19,6 +19,8 @@ type InvoiceManager struct {
 
 // Generate new Invoice object
 func New(host string, token string) (*InvoiceManager, error) {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	invoice := InvoiceManager{
 		endpoint: host + "/api/v1",
 		c: &httpClient{
